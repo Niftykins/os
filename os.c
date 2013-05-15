@@ -6,8 +6,8 @@
 #include "queue.h"
 #include <pthread.h>
 
-PA* CPU_QUEUE;
-PA* IO_QUEUE;
+Queue* CPU_QUEUE;
+Queue* IO_QUEUE;
 int CPU = 2, IO = 1;
 int CLOCK = 0;
 
@@ -100,17 +100,24 @@ void *io(void) {
 int main(void) {
 	List* jobs;
 	Node* job;
-	PA* pa;
+	Queue* pa;
 	PA temp;
 	pthread_t cpu_thread, io_thread;
+	int number_of_jobs;
 
 	jobs = readJobs();
+	number_of_jobs = jobs->length;
 
-	pa = createQueue(jobs->length);
-	IO_QUEUE = createQueue(jobs->length);
+	pa = createQueue(number_of_jobs);
+	IO_QUEUE = createQueue(number_of_jobs);
+
+	printf("io:  ");
+	isEmpty(IO_QUEUE);
+	printf("cpu:  ");
+	isEmpty(pa);
 
 	job = peek(jobs);
-	for(int ii=1; ii<=jobs->length; ii++) {
+	for(int ii=1; ii<=number_of_jobs; ii++) {
 		sscanf(job->name, "PID_%d", &temp.pid); //get the PID from file name
 		temp.ac = 1;
 		temp.state = CPU;
@@ -121,6 +128,7 @@ int main(void) {
 		temp.waiting = 0;
 
 		enqueue(pa, temp);
+		//printf("rear: %d | %d\n", pa->rear, IO_QUEUE->rear);
 
 		if(job->next != NULL)
 			job = job->next;
@@ -131,8 +139,28 @@ int main(void) {
 	CPU_QUEUE = pa;
 	display(CPU_QUEUE);
 
+	for(int ii=1, length = CPU_QUEUE->rear; ii<length; ii++) {
+		dequeue(CPU_QUEUE);
+		display(CPU_QUEUE);
+		printf("%d\n", CPU_QUEUE->rear-1);
+	}
+
+
+	printf("io:  ");
+	isEmpty(IO_QUEUE);
+	printf("cpu: ");
+	isEmpty(CPU_QUEUE);
+
 	enqueue(IO_QUEUE, temp);
 	display(IO_QUEUE);
+
+	//printf("\ntesting io queue\n");
+	//enqueue(IO_QUEUE, temp);
+	//display(IO_QUEUE);
+
+
+//	enqueue(IO_QUEUE, temp);
+//	display(IO_QUEUE);
 
 /*	int error[2];
 	error[0] = pthread_create( &cpu_thread, NULL, cpu, NULL);
@@ -142,7 +170,7 @@ int main(void) {
 	pthread_join(cpu_thread, NULL);
 
 */
-	printf("%d\n", isEmpty(IO_QUEUE));
+	//printf("%d\n", isEmpty(IO_QUEUE));
 
 	printf("le fin\n");
 

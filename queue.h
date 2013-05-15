@@ -1,14 +1,14 @@
 typedef struct {
-	PA* PCB;
+	PA* pa;
 	int length;
 	int max;
 	int front;
 	int rear;
 } Queue;
 
-PA* createQueue(int);
-void enqueue(PA*, PA); 
-PA dequeue(PA*);
-void shift(PA*);
-void display(PA*);
-int isEmpty(PA*);
+Queue* createQueue(int);
+void enqueue(Queue*, PA); 
+PA dequeue(Queue*);
+void shift(Queue*);
+void display(Queue*);
+int isEmpty(Queue*);

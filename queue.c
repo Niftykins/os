@@ -3,68 +3,72 @@
 #include <stdio.h>
 #include "queue.h"
 
-int front = 1,rear = 1, max;
 
-PA* createQueue(int size) {
+Queue* createQueue(int size) {
     size++;
-    PA* queue;
-    max = size;
+    Queue* q;
 
-    printf("f: %d, r: %d, m: %d\n", front, rear, max);
-    queue = (PA*)malloc((size) * sizeof(PA));
+    q = (Queue*)malloc(sizeof(Queue));
+    q->pa = (PA*)malloc(size * sizeof(PA));
 
-    return queue;
+    q->front = 1;
+    q->rear = 1;
+    q->max = size;
+
+    printf("f: %d, r: %d, m: %d\n", q->front, q->rear, q->max);
+
+    return q;
 }
 
-void enqueue(PA* queue, PA element) {
-    if(rear == max) {
+void enqueue(Queue* q, PA element) {
+    if(q->rear == q->max) {
         printf("overflow\n");
     } else {
-        queue[rear] = element;
-        rear++;
+        q->pa[q->rear] = element;
+        q->rear++;
     }
 }
  
-PA dequeue(PA* queue) {
+PA dequeue(Queue* q) {
     PA returner;
-    if(rear == front) {
+    if(q->front == q->max) {
         printf("underflow\n");
     } else {
-        returner = queue[front];
-        shift(queue);
-        rear--;
+        returner = q->pa[q->front];
+        shift(q);
+        q->rear--;
     }
 
     return returner;
 }
 
 //shuffle the contents of the array
-void shift(PA* queue) {
-    for(int ii = 0; ii != rear - 1; ii++) {
-        *(queue+ii) = *(queue+ii+1);
+void shift(Queue* q) {
+    for(int ii = 0; ii != q->rear - 1; ii++) {
+        *(q->pa+ii) = *(q->pa+ii+1);
     }
 }
 
 
-int isEmpty(PA* queue) {
-    printf("f: %d, r: %d, m: %d\n", front, rear, max);
+int isEmpty(Queue* q) {
+    printf("f: %d, r: %d, m: %d\n", q->front, q->rear, q->max);
 
-    if(front == rear)
+    if(q->front == q->rear)
         return 1;
     else
         return 0;
 }
 
-void display(PA* queue) {
-    if(front == rear)
+void display(Queue* q) {
+    if(q->front == q->rear)
         printf("Queue is empty\n");
     else {
-        printf("| pid| arr|time|times\n");
-        for(int ii=front; ii<rear; ii++) {
-            printf("| %02d | %02d | %02d | ", queue[ii].pid, queue[ii].arrive, queue[ii].time);
+        printf("|pid|state|arrive|time|times\n");
+        for(int ii=q->front; ii<q->rear; ii++) {
+            printf("| %02d|  %02d |  %02d  | %02d | ", q->pa[ii].pid, q->pa[ii].state, q->pa[ii].arrive, q->pa[ii].time);
 
-            for(int jj=1; jj<=queue[ii].times[0]; jj++) {
-                printf("%d ", queue[ii].times[jj]);
+            for(int jj=1; jj<=q->pa[ii].times[0]; jj++) {
+                printf("%d ", q->pa[ii].times[jj]);
             }
             printf("\n");
         }
