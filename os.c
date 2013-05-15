@@ -6,8 +6,8 @@
 #include "queue.h"
 #include <pthread.h>
 
-PA* CPU_QUEUE;
-PA* IO_QUEUE;
+Queue* CPU_QUEUE;
+Queue* IO_QUEUE;
 int CPU = 2, IO = 1;
 int CLOCK = 0;
 
@@ -123,13 +123,22 @@ void displayPAQueue(List* PA_QUEUE) {
 int main(void) {
 	List* jobs;
 	Node* job;
+<<<<<<< HEAD
 	List* PA_QUEUE;
 	PA* temp;
 	pthread_t cpu_thread, io_thread;
 	int number_of_jobs, pid;
+=======
+	Queue* pa;
+	PA temp;
+	pthread_t cpu_thread, io_thread;
+	int number_of_jobs;
+>>>>>>> queue
 
 	jobs = readJobs();
+	number_of_jobs = jobs->length;
 
+<<<<<<< HEAD
 	//pa = createQueue(jobs->length);
 	//IO_QUEUE = createQueue(jobs->length);
 
@@ -159,23 +168,71 @@ int main(void) {
 		printf("\n");
 	*/
 		//enqueue(pa, temp);
+=======
+	pa = createQueue(number_of_jobs);
+	IO_QUEUE = createQueue(number_of_jobs);
+
+	printf("io:  ");
+	isEmpty(IO_QUEUE);
+	printf("cpu:  ");
+	isEmpty(pa);
+
+	job = peek(jobs);
+	for(int ii=1; ii<=number_of_jobs; ii++) {
+		sscanf(job->name, "PID_%d", &temp.pid); //get the PID from file name
+		temp.ac = 1;
+		temp.state = CPU;
+		temp.arrive = 0;
+		temp.times = readProcess(job->name);
+		temp.time = temp.times[1];
+		temp.length = temp.times[0];
+		temp.waiting = 0;
+
+		enqueue(pa, temp);
+		//printf("rear: %d | %d\n", pa->rear, IO_QUEUE->rear);
+>>>>>>> queue
 
 		freeNode(job);
 	//	if(job->next != NULL)
 	//		job = job->next;
 	}
 
+<<<<<<< HEAD
 	//displayPAQueue(PA_QUEUE);
 	freeList(jobs);
 
 	//freeNode(job);
+=======
+
+	freeNode(job);
+>>>>>>> queue
 
 /*	CPU_QUEUE = pa;
 	display(CPU_QUEUE);
 
+	for(int ii=1, length = CPU_QUEUE->rear; ii<length; ii++) {
+		dequeue(CPU_QUEUE);
+		display(CPU_QUEUE);
+		printf("%d\n", CPU_QUEUE->rear-1);
+	}
+
+
+	printf("io:  ");
+	isEmpty(IO_QUEUE);
+	printf("cpu: ");
+	isEmpty(CPU_QUEUE);
+
 	enqueue(IO_QUEUE, temp);
 	display(IO_QUEUE);
 */
+
+	//printf("\ntesting io queue\n");
+	//enqueue(IO_QUEUE, temp);
+	//display(IO_QUEUE);
+
+
+//	enqueue(IO_QUEUE, temp);
+//	display(IO_QUEUE);
 
 /*	int error[2];
 	error[0] = pthread_create( &cpu_thread, NULL, cpu, NULL);
