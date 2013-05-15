@@ -4,24 +4,15 @@
 #include "os.h"
 #include "list.h"
 #include "queue.h"
+#include <pthread.h>
 
 PA* CPU_QUEUE;
 PA* IO_QUEUE;
 int CPU = 2, IO = 1;
+int CLOCK = 0;
 
 void chomp(char* s) {
 	s[strcspn(s,"\n")] = '\0';
-}
-
-int cpu() {
-	/*	take one PA from queue
-		pretend execute for time of CPU needed
-		if terminates, print to logB
-		if needs io, update PA -> ac++, state=1, arrive+=timeInCPU, time=timeInNewAc, then queue into IO
-		print updated PA to logA
-		*/
-
-	return 1;
 }
 
 int* readProcess(char* name) {
@@ -47,9 +38,7 @@ int* readProcess(char* name) {
 		while(!feof(f)) {
 			fscanf(f, "%d %d %d", &step, &type, &time);
 			timer[step] = time;
-			//printf("%d: %d\n",step, timer[step]);
 		}
-		//printf("\n");
 
 		if(ferror(f))
 			perror("Error reading from file\n");
@@ -92,24 +81,37 @@ List* readJobs() {
 	return jobs;
 }
 
+void *cpu(void) {
+	printf("weow cpu\n");
+	if(isEmpty(IO_QUEUE))
+		printf("io empty\n");
+	else
+		printf("io not empty\n");
+
+	return NULL;
+}
+
+void *io(void) {
+	printf("weow io\n");
+
+	return NULL;
+}
 
 int main(void) {
 	List* jobs;
 	Node* job;
 	PA* pa;
 	PA temp;
+	pthread_t cpu_thread, io_thread;
 
 	jobs = readJobs();
 
 	pa = createQueue(jobs->length);
-	//pa = (PA*)malloc((jobs->length) * sizeof(PA));
-	IO_QUEUE = (PA*)malloc((jobs->length) * sizeof(PA));
+	IO_QUEUE = createQueue(jobs->length);
 
 	job = peek(jobs);
 	for(int ii=1; ii<=jobs->length; ii++) {
-		printf("\n%s\n", job->name);
-
-		sscanf(job->name, "PID_%d", &temp.pid);
+		sscanf(job->name, "PID_%d", &temp.pid); //get the PID from file name
 		temp.ac = 1;
 		temp.state = CPU;
 		temp.arrive = 0;
@@ -117,12 +119,6 @@ int main(void) {
 		temp.time = temp.times[1];
 		temp.length = temp.times[0];
 		temp.waiting = 0;
-
-		printf("PA: %d %d %d %d %d\n", temp.pid, temp.ac, temp.state, temp.arrive, temp.time);
-		printf("%d\n", temp.length);
-		for(int jj=1; jj<=temp.times[0]; jj++) {
-			printf("%d: %d\n", jj, temp.times[jj]);
-		}
 
 		enqueue(pa, temp);
 
@@ -134,6 +130,21 @@ int main(void) {
 
 	CPU_QUEUE = pa;
 	display(CPU_QUEUE);
+
+	enqueue(IO_QUEUE, temp);
+	display(IO_QUEUE);
+
+/*	int error[2];
+	error[0] = pthread_create( &cpu_thread, NULL, cpu, NULL);
+	error[1] = pthread_create( &io_thread, NULL, io, NULL);
+
+	pthread_join(cpu_thread, NULL);
+	pthread_join(cpu_thread, NULL);
+
+*/
+	printf("%d\n", isEmpty(IO_QUEUE));
+
+	printf("le fin\n");
 
 	return 1;
 }

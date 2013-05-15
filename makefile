@@ -6,7 +6,7 @@ kek : $(OBJ)
 	$(CC) -o kek $(OBJ)
 
 os.o : os.c list.h queue.h
-	$(CC) $(CFLAGS) -c os.c
+	$(CC) $(CFLAGS) -pthread -c os.c
 
 list.o : list.c list.h
 	$(CC) $(CFLAGS) -c list.c

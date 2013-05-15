@@ -10,6 +10,7 @@ PA* createQueue(int size) {
     PA* queue;
     max = size;
 
+    printf("f: %d, r: %d, m: %d\n", front, rear, max);
     queue = (PA*)malloc((size) * sizeof(PA));
 
     return queue;
@@ -37,10 +38,21 @@ PA dequeue(PA* queue) {
     return returner;
 }
 
+//shuffle the contents of the array
 void shift(PA* queue) {
     for(int ii = 0; ii != rear - 1; ii++) {
         *(queue+ii) = *(queue+ii+1);
     }
+}
+
+
+int isEmpty(PA* queue) {
+    printf("f: %d, r: %d, m: %d\n", front, rear, max);
+
+    if(front == rear)
+        return 1;
+    else
+        return 0;
 }
 
 void display(PA* queue) {
