@@ -69,7 +69,7 @@ List* readJobs() {
 	else {
 		while(getline(&line, &n, f) != -1) {
 			chomp(line);
-			push(jobs, line);
+			push(jobs, (void*)line);
 		}
 	
 		if(ferror(f))
@@ -96,43 +96,86 @@ void *io(void) {
 
 	return NULL;
 }
+/*
+void displayPAQueue(List* PA_QUEUE) {
+	Node* current;
+	current = peek(PA_QUEUE);
+	PA data;
+
+    if(current == NULL)
+        printf("List is empty\n");
+    else {
+    	data = &(PA*)current->data;
+        printf("| pid| arr|time|times\n");
+        while(current != NULL) {
+            printf("| %02d | %02d | %02d | ", data.pid, data.arrive, data.time);
+
+            for(int jj=1; jj<=data.times[0]; jj++) {
+            	printf("%d ", data.times[jj]);
+            }
+            printf("\n");
+            current = current->next;
+        }
+    }
+    freeNode(current);
+} */
 
 int main(void) {
 	List* jobs;
 	Node* job;
-	PA* pa;
-	PA temp;
+	List* PA_QUEUE;
+	PA* temp;
 	pthread_t cpu_thread, io_thread;
+	int number_of_jobs, pid;
 
 	jobs = readJobs();
 
-	pa = createQueue(jobs->length);
-	IO_QUEUE = createQueue(jobs->length);
+	//pa = createQueue(jobs->length);
+	//IO_QUEUE = createQueue(jobs->length);
 
-	job = peek(jobs);
-	for(int ii=1; ii<=jobs->length; ii++) {
-		sscanf(job->name, "PID_%d", &temp.pid); //get the PID from file name
-		temp.ac = 1;
-		temp.state = CPU;
-		temp.arrive = 0;
-		temp.times = readProcess(job->name);
-		temp.time = temp.times[1];
-		temp.length = temp.times[0];
-		temp.waiting = 0;
+	number_of_jobs = jobs->length;
+	
+	for(int ii=1; ii<=number_of_jobs; ii++) {
+		job = pop(jobs);
+		printf(">>%s\n", (char*)job->data);
+		sscanf(job->data, "PID_%d", &pid); //get the PID from file name
+		temp->pid = pid;
+		printf("meow %d\n", pid);
+		temp->ac = 1;
+		temp->state = CPU;
+		temp->arrive = 0;
+		temp->times = readProcess(job->data);
+		temp->time = temp->times[1];
+		temp->length = temp->times[0];
+		temp->waiting = 0;
 
-		enqueue(pa, temp);
+		//push(PA_QUEUE, (void*)temp);
 
-		if(job->next != NULL)
-			job = job->next;
+	/*	printf("PA: %d %d %d %d %d\n", temp.pid, temp.ac, temp.state, temp.arrive, temp.time);
+		printf("%d\n", temp.length);
+		for(int jj=1; jj<=temp.times[0]; jj++) {
+			printf("%d ", temp.times[jj]);
+		}
+		printf("\n");
+	*/
+		//enqueue(pa, temp);
+
+		freeNode(job);
+	//	if(job->next != NULL)
+	//		job = job->next;
 	}
 
-	freeNode(job);
+	//displayPAQueue(PA_QUEUE);
+	freeList(jobs);
 
-	CPU_QUEUE = pa;
+	//freeNode(job);
+
+/*	CPU_QUEUE = pa;
 	display(CPU_QUEUE);
 
 	enqueue(IO_QUEUE, temp);
 	display(IO_QUEUE);
+*/
 
 /*	int error[2];
 	error[0] = pthread_create( &cpu_thread, NULL, cpu, NULL);
@@ -142,7 +185,7 @@ int main(void) {
 	pthread_join(cpu_thread, NULL);
 
 */
-	printf("%d\n", isEmpty(IO_QUEUE));
+	//printf("%d\n", isEmpty(IO_QUEUE));
 
 	printf("le fin\n");
 

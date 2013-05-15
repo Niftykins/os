@@ -16,13 +16,15 @@ List* createList() {
 	return list;
 }
 
-void push(List* list, char name[]) {
+void push(List* list, void* data) {
 	Node* newNode;
 
-	newNode = (Node*)malloc(sizeof(Node));
-	newNode->name = (char*)malloc(FILE_LENGTH * sizeof(char));
+	printf("<%s\n", (char*)data);
 
-	strcpy(newNode->name, name);
+	newNode = (Node*)malloc(sizeof(Node));
+	newNode->data = malloc(FILE_LENGTH * sizeof(Node));
+
+	memcpy(newNode->data, data, sizeof(Node));
 	newNode->next = NULL;
 	list->length++;
 
@@ -60,7 +62,7 @@ void freeList(List* list) {
 
 	while (node != NULL) {
 		nextNode = node->next;
-		free(node->name);
+		free(node->data);
 		free(node);
 		node = nextNode;
 	}
@@ -69,26 +71,10 @@ void freeList(List* list) {
 }
 
 void freeNode(Node* node) {
-	free(node->name);
+	free(node->data);
 	free(node);
 }
 
-void printList(List* list) {
-	Node* curr;
-	curr = list->head;
-
-	if(list->head == NULL) {
-		printf("List is empty.\n");
-	} else {
-		printf("List is: ");
-	
-		while(curr != NULL) {
-			printf("%s, ", curr->name);
-			curr = curr->next;
-		}
-		printf("\n");
-	}
-}
 Node* peek(List* list) {
 	return list->head;
 }
