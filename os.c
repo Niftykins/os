@@ -134,6 +134,7 @@ int main(void) {
 			job = job->next;
 	}
 
+
 	freeNode(job);
 
 	CPU_QUEUE = pa;
