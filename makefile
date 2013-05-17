@@ -3,7 +3,7 @@ CFLAGS = -Wall -pedantic -ansi -std=c99
 OBJ = os.o list.o queue.o
 
 kek : $(OBJ)
-	$(CC) -o kek $(OBJ)
+	$(CC) -o kek -pthread -std=c99 $(OBJ)
 
 os.o : os.c list.h queue.h
 	$(CC) $(CFLAGS) -pthread -c os.c

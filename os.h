@@ -6,5 +6,14 @@ typedef struct PA {
 	int time;
 	int* times;
 	int length;
-	int waiting;
+	int wait_io;
+	int wait_cpu;
 } PA;
+
+typedef struct Times {
+	int clock;
+	int cpu_idle;
+	int cpu;
+	int io_idle;
+	int io;
+} Times;
