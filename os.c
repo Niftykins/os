@@ -21,62 +21,81 @@ void chomp(char* s) {
     s[strcspn(s,"\n")] = '\0';
 }
 
+void wipeLogs() {
+    FILE* f;
+    f = fopen("log-A", "w");
+    fclose(f);
+    f = fopen("log-B", "w");
+    fclose(f);
+}
+
+void writeA(PA pa) {
+    FILE* f;
+    f = fopen("log-A", "a");
+    fprintf(f, "New Process:\nPID=%d\nAC=1\nState=CPU\nArrive=0\nTime=%d\n\n", pa.pid, pa.time);
+    fclose(f);
+}
+
+void writeB(PA pa, int terminated) {
+    FILE* f;
+    f = fopen("log-B", "a");
+
+    switch(terminated) {
+        case 0: fprintf(f, "Finishing %s Activity:\n", pa.state==CPU?"I/O":"CPU"); break;
+        case 1: fprintf(f, "Process PID-%d is terminated.\n", pa.pid); break;
+    }
+
+    fprintf(f, "PID=%d\n", pa.pid);
+    fprintf(f, "AC=%d\n", pa.ac);
+    fprintf(f, "State=%s\n", pa.state==CPU?"CPU":"I/O");
+    fprintf(f, "Arrive=%d\n", pa.arrive);
+    fprintf(f, "Time=%d\n\n", pa.time);
+
+    fclose(f);
+}
+
 int* readProcess(char* name) {
     FILE* f;
-    int step, type, time;
-    int size = 0;
-    int* timer;
+    int step, type, time, size = 0, *timer;
 
     f = fopen(name, "r");
 
-    if(f == NULL)
-        perror("Error opening file\n");
-    else {
-
-        while (EOF != fscanf(f, "%*d %*d %*d")) {
-            size++;
-        }
-        rewind(f);
-
-        timer = (int*)malloc((size+1) * sizeof(int));
-        timer[0] = size; /*store array length in 0 as its 1 based anyway*/
-
-        while(!feof(f)) {
-            fscanf(f, "%d %d %d", &step, &type, &time);
-            timer[step] = time;
-        }
-
-        if(ferror(f))
-            perror("Error reading from file\n");
-
-        fclose(f);
+    while (EOF != fscanf(f, "%*d %*d %*d")) {
+        size++;
     }
+    rewind(f);
+
+    timer = (int*)malloc((size+1) * sizeof(int));
+    timer[0] = size; /*store array length in 0 as its 1 based anyway*/
+
+    while(!feof(f)) {
+        fscanf(f, "%d %d %d", &step, &type, &time);
+        timer[step] = time;
+    }
+
+    fclose(f);
 
     return timer;
 }
 
-List* readJobs() {
+List* readJobs(char* n) {
     FILE* f;
     char line[20];
     List* jobs;
 
     jobs = createList();
 
-    f = fopen("job", "r");
+    f = fopen(n ? n : "job", "r");
 
     if(f == NULL)
-        perror("Error opening file\n");
-    else {
-        while(fgets(line, 20, f) != NULL) {
-            chomp(line);
-            push(jobs, line);
-        }
-    
-        if(ferror(f))
-            perror("Error reading from file\n");
+        printf("Probably no file by that name\n");
 
-        fclose(f);
+    while(fgets(line, 20, f) != NULL) {
+        chomp(line);
+        push(jobs, line);
     }
+
+    fclose(f);
 
     return jobs;
 }
@@ -89,7 +108,7 @@ PA getPA(Queue* queue) {
     return temp;
 }
 
-void *Cpu(void) {
+void *Cpu(void* zz) {
     PA* current = NULL;
     PA actual;
 
@@ -114,25 +133,26 @@ void *Cpu(void) {
             }
 
             if(current != NULL && current->time == 0) {
-                    //printf("Finished CPU pid_%d fin: %d\n", current->pid, Timer.clock+1);
-                    
-                    if(current->ac == current->times[0]) { //no more activities
-                        enqueue(FINISHED, actual);
-                        //printf("\t\tPID_%d HAS FINISHED AT %d\n", current->pid, Timer.clock+1);
-                        //printf("\t\tc: %d i: %d\n", current->wait_cpu, current->wait_io);
-                        fprintf(stderr, ".");
-                        current = NULL;
-                    } else {
-                        current->state = IO;
-                        current->wait_cpu += (Timer.clock+1-current->arrive-current->times[current->ac]);
-                        current->arrive = Timer.clock+1;
-                        current->ac++;
-                        current->time = current->times[current->ac];
-                        pthread_mutex_lock(&lock);
-                        enqueue(IO_QUEUE, actual);
-                        pthread_mutex_unlock(&lock);
-                        current = NULL;
-                    }
+                //printf("Finished CPU pid_%d fin: %d\n", current->pid, Timer.clock+1);
+                if(current->ac == current->times[0]) { //no more activities
+                    enqueue(FINISHED, actual);
+                    writeB(actual, 1);
+                    //printf("\t\tPID_%d HAS FINISHED AT %d\n", current->pid, Timer.clock+1);
+                    //printf("\t\tc: %d i: %d\n", current->wait_cpu, current->wait_io);
+                    fprintf(stderr, ".");
+                    current = NULL;
+                } else {
+                    current->state = IO;
+                    current->wait_cpu += (Timer.clock+1-current->arrive-current->times[current->ac]);
+                    current->arrive = Timer.clock+1;
+                    current->ac++;
+                    current->time = current->times[current->ac];
+                    writeB(actual, 0);
+                    pthread_mutex_lock(&lock);
+                    enqueue(IO_QUEUE, actual);
+                    pthread_mutex_unlock(&lock);
+                    current = NULL;
+                }
             }
         }
         pthread_barrier_wait(&barr);
@@ -141,7 +161,7 @@ void *Cpu(void) {
     return NULL;
 }
 
-void *Io(void) {
+void *Io(void* zz) {
     PA* current = NULL;
     PA actual;
 
@@ -172,6 +192,7 @@ void *Io(void) {
                 current->arrive = Timer.clock+1;
                 current->ac++;
                 current->time = current->times[current->ac];
+                writeB(actual, 0);
                 pthread_mutex_lock(&lock);
                 enqueue(CPU_QUEUE, actual);
                 pthread_mutex_unlock(&lock);
@@ -184,7 +205,7 @@ void *Io(void) {
     return NULL;
 }
 
-void *Clock(void) {
+void *Clock(void* zz) {
     pthread_t cpu_thread, io_thread;
     
     fprintf(stderr, "Simulating ");
@@ -209,14 +230,15 @@ void *Clock(void) {
     return NULL;
 }
 
-int main(void) {
-    List* jobs;
-    Node* job;
-    int number_of_jobs;
+int main(int argc, char* argv[]) {
+    List* jobs; Node* job;
+    int number_of_jobs, wait_io = 0, wait_cpu = 0;
     PA temp; 
     pthread_t clock_thread;
+
+    wipeLogs();
     
-    jobs = readJobs();
+    jobs = readJobs(argv[1]);
     number_of_jobs = jobs->length;
 
     CPU_QUEUE = createQueue(number_of_jobs);
@@ -236,23 +258,22 @@ int main(void) {
         temp.wait_cpu = 0;
 
         enqueue(CPU_QUEUE, temp);
+        writeA(temp);
 
         if(job->next != NULL) job = job->next;
     }
 
     freeNode(job);
 
-    pthread_barrier_init(&barr, NULL, 3);
-    pthread_barrier_init(&barr2, NULL, 2);
+    pthread_barrier_init(&barr, NULL, 3); //barrier all must reach
+    pthread_barrier_init(&barr2, NULL, 2); //barrier to half io/cpu execution
     pthread_mutex_init(&lock, NULL);
 
     pthread_create( &clock_thread, NULL, Clock, NULL);
     pthread_join(clock_thread, NULL);
 
-    int wait_io = 0, wait_cpu = 0;
     for(int ii=0; ii<number_of_jobs; ii++) {
         temp = dequeue(FINISHED);
-
         wait_cpu += temp.wait_cpu;
         wait_io += temp.wait_io;
     }
