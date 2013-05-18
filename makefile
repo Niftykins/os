@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -ansi -std=c99
+CFLAGS = -Wall -pedantic -ansi -std=c99 -g
 OBJ = os.o list.o queue.o
 
-kek : $(OBJ)
-	$(CC) -o kek -pthread -std=c99 $(OBJ)
+scheduler : $(OBJ)
+	$(CC) -o scheduler -pthread -g -std=c99 $(OBJ)
 
 os.o : os.c list.h queue.h
 	$(CC) $(CFLAGS) -pthread -c os.c
@@ -15,4 +15,4 @@ queue.o : queue.c queue.h os.h
 	$(CC) $(CFLAGS) -c queue.c
 
 clean:
-	rm -f kek $(OBJ)
+	rm -f scheduler $(OBJ)

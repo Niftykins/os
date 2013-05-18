@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include "queue.h"
 
-
+/*
+    Creates a Queue of specified size and allocates memory
+    for the PA array which will be used to store each of the
+    process activities
+*/
 Queue* createQueue(int size) {
     Queue* q;
 
@@ -15,10 +19,12 @@ Queue* createQueue(int size) {
     q->rear = 1;
     q->max = size;
 
-
     return q;
 }
 
+/*
+    Adds a new PA to Queue q
+*/
 void enqueue(Queue* q, PA element) {
     if(q->rear == q->max) {
         printf("overflow\n");
@@ -28,6 +34,10 @@ void enqueue(Queue* q, PA element) {
     }
 }
  
+/*
+    Removes and returns first PA in the Queue q
+    Reindexes the queue so the first index is always used
+*/
 PA dequeue(Queue* q) {
     PA returner;
     if(q->front == q->max) {
@@ -41,35 +51,27 @@ PA dequeue(Queue* q) {
     return returner;
 }
 
+/*
+    Reindexing function for when elements get removed
+*/
 void shift(Queue* q) {
-    int ii;
-    for(ii = 0; ii != q->rear - 1; ii++) {
+    for(int ii = 0; ii != q->rear - 1; ii++) {
         *(q->pa+ii) = *(q->pa+ii+1);
     }
 }
 
-
+/*
+    Function to check if the Queue is currently empty or not
+*/
 int isEmpty(Queue* q) {
-
-    if(q->front == q->rear)
-        return 1;
-    else
-        return 0;
+    if(q->front == q->rear) return 1;
+    else return 0;
 }
 
-void display(Queue* q) {
-    int ii, jj;
-    if(q->front == q->rear)
-        printf("Queue is empty\n");
-    else {
-        printf("|pid|state|arrive|time|times\n");
-        for(ii=q->front; ii<q->rear; ii++) {
-            printf("| %02d|  %02d |  %02d  | %02d | ", q->pa[ii].pid, q->pa[ii].state, q->pa[ii].arrive, q->pa[ii].time);
-
-            for(jj=1; jj<=q->pa[ii].times[0]; jj++) {
-                printf("%d ", q->pa[ii].times[jj]);
-            }
-            printf("\n");
-        }
-    }
+/*
+    Free the memory used by the Queue
+*/
+void freeQueue(Queue* q) {
+    free(q->pa);
+    free(q);
 }
